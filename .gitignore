@@ -1,0 +1,30 @@
+# Python build artifacts
+__pycache__/
+*.py[cod]
+*.so
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+.eggs/
+pip-wheel-metadata/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# MacOS-specific
+.DS_Store
+
+# VS Code/IDE config (optional)
+.vscode/
+.idea/
+
+# Test cache
+.pytest_cache/
+
+# Logs
+*.log
+.qodo
