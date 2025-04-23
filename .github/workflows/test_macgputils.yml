@@ -1,0 +1,40 @@
+name: Test macgputils on Intel and Apple Silicon Macs
+
+on: [push, workflow_dispatch]
+
+jobs:
+  test_intel_mac:
+    runs-on: macos-12  # Intel-based macOS runner (macOS 12)
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install macgputils
+
+      - name: Test macgputils on Intel Mac
+        run: |
+          python -c "import macgputils; print(macgputils.get_gpu_stats())"
+
+  test_apple_silicon_mac:
+    runs-on: macos-11  # Apple Silicon (M1/M2) macOS runner (macOS 11)
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install macgputils
+
+      - name: Test macgputils on Apple Silicon Mac
+        run: |
+          python -c "import macgputils; print(macgputils.get_gpu_stats())"
