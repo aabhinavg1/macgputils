@@ -4,7 +4,7 @@ on: [push, workflow_dispatch]
 
 jobs:
   test_macgputils:
-    runs-on: macos-13  # Ensure you are using a macOS runner version that supports powermetrics
+    runs-on: macos-13  # macOS 13 runner
 
     steps:
       - uses: actions/checkout@v3
@@ -22,9 +22,9 @@ jobs:
       - name: Run powermetrics to check GPU stats
         run: |
           echo "Running powermetrics to check GPU stats"
-          sudo powermetrics --samplers gpu_power > powermetrics_output.txt
+          sudo timeout 60s powermetrics --samplers gpu_power > powermetrics_output.txt || echo "Timeout or failure"
           cat powermetrics_output.txt  # Display the output in the log
-          
+
       - name: Run macgputils_test.py with sudo
         run: |
           sudo python3 eg.py
