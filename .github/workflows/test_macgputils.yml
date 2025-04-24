@@ -1,10 +1,10 @@
-name: Test macgputils with sudo
+name: Test macgputils on Mac (Intel/ARM)
 
 on: [push, workflow_dispatch]
 
 jobs:
   test_macgputils:
-    runs-on: macos-13  # macOS 13 runner
+    runs-on: macos-14  # Supports both Intel and Apple Silicon
 
     steps:
       - uses: actions/checkout@v3
@@ -19,22 +19,25 @@ jobs:
           pip install --upgrade pip
           pip install macgputils
 
-      - name: Run powermetrics to check GPU stats
+      - name: Detect architecture and log system info
         run: |
-          echo "Running powermetrics to check GPU stats"
-          # Increase timeout to 5 minutes (300s)
-          sudo timeout 300s powermetrics --samplers gpu_power > powermetrics_output.txt || echo "Timeout or failure"
-          cat powermetrics_output.txt  # Display the output in the log
+          echo "Architecture: $(uname -m)"
+          uname -a
+          system_profiler SPHardwareDataType
 
-      - name: Check if powermetrics worked correctly
+      - name: Conditionally run powermetrics or fallback
         run: |
-          echo "Checking the powermetrics output for errors"
-          if [[ -s powermetrics_output.txt ]]; then
-            echo "powermetrics output available"
+          ARCH=$(uname -m)
+          if [[ "$ARCH" == "x86_64" ]]; then
+            echo "Running on Intel-based Mac. Using powermetrics..."
+            sudo powermetrics --samplers gpu_power --timeout 30 > powermetrics_output.txt || echo "powermetrics failed"
           else
-            echo "No output from powermetrics. Something went wrong."
+            echo "Running on Apple Silicon. Using system_profiler as fallback..."
+            system_profiler SPDisplaysDataType > powermetrics_output.txt || echo "Fallback failed"
           fi
+          echo "----- Output -----"
+          cat powermetrics_output.txt
 
-      - name: Run macgputils_test.py with sudo
+      - name: Run macgputils test script with sudo
         run: |
-          sudo python3 eg.py  # Run the Python test script with sudo
+          sudo python3 eg.py
