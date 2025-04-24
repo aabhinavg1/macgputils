@@ -4,7 +4,7 @@ on: [push, workflow_dispatch]
 
 jobs:
   test_macgputils:
-    runs-on: macos-14  # Supports both Intel and Apple Silicon
+    runs-on: macos-13  # This uses the latest macOS (typically M1-based)
 
     steps:
       - uses: actions/checkout@v3
@@ -19,25 +19,19 @@ jobs:
           pip install --upgrade pip
           pip install macgputils
 
-      - name: Detect architecture and log system info
+      - name: Run powermetrics to check GPU stats
         run: |
-          echo "Architecture: $(uname -m)"
-          uname -a
-          system_profiler SPHardwareDataType
-
-      - name: Conditionally run powermetrics or fallback
-        run: |
-          ARCH=$(uname -m)
-          if [[ "$ARCH" == "x86_64" ]]; then
-            echo "Running on Intel-based Mac. Using powermetrics..."
-            sudo powermetrics --samplers gpu_power --timeout 30 > powermetrics_output.txt || echo "powermetrics failed"
-          else
-            echo "Running on Apple Silicon. Using system_profiler as fallback..."
-            system_profiler SPDisplaysDataType > powermetrics_output.txt || echo "Fallback failed"
-          fi
-          echo "----- Output -----"
+          echo "Running powermetrics to check GPU stats"
+          sudo powermetrics --samplers gpu_power > powermetrics_output.txt || echo "Timeout or failure"
           cat powermetrics_output.txt
 
-      - name: Run macgputils test script with sudo
+      - name: Check architecture and run eg.py on M1 only
         run: |
-          sudo python3 eg.py
+          ARCH=$(uname -m)
+          echo "Detected architecture: $ARCH"
+          if [[ "$ARCH" == "arm64" ]]; then
+            echo "Running on Apple Silicon (M1 or newer)..."
+            sudo python3 eg.py
+          else
+            echo "Not Apple Silicon, skipping eg.py"
+          fi
