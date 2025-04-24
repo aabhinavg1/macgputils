@@ -1,10 +1,11 @@
-name: Test macgputils on Intel Mac
+name: Test macgputils with sudo
 
 on: [push, workflow_dispatch]
 
 jobs:
-  test_intel_mac:
-    runs-on: macos-13  # macOS Ventura (Intel-based GitHub runner)
+  test_macgputils:
+    runs-on: macos-13  # GitHub-hosted Intel Mac
+
     steps:
       - uses: actions/checkout@v3
 
@@ -18,6 +19,13 @@ jobs:
           pip install --upgrade pip
           pip install macgputils
 
-      - name: Run macgputils test
+      - name: Write macgputils test script
         run: |
-          python -c "import macgputils; print(macgputils.get_gpu_stats())"
+          cat <<EOF > run_macgputils.py
+import macgputils
+print("GPU Stats:", macgputils.get_gpu_stats())
+EOF
+
+      - name: Run the script with sudo
+        run: |
+          sudo python3 run_macgputils.py
