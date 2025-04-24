@@ -3,9 +3,14 @@ import re
 
 def get_gpu_stats(samples=1):
     try:
+        # Run the powermetrics command
         output = subprocess.check_output([
             "sudo", "powermetrics", "--samplers", "gpu_power", f"-n{samples}"
         ], stderr=subprocess.DEVNULL).decode()
+
+        # If output is empty, it may indicate unsupported GPU stats
+        if not output:
+            return [{"Error": "GPU stats are unsupported on this system."}]
 
         samples_data = output.split("*** Sampled system activity")
         parsed_samples = []
@@ -34,7 +39,17 @@ def get_gpu_stats(samples=1):
 
             parsed_samples.append(gpu_data)
 
+        if not parsed_samples:
+            return [{"Error": "No GPU stats found."}]
+
         return parsed_samples
 
+    except subprocess.CalledProcessError as e:
+        # Specific error handling for when powermetrics fails
+        return [{"Error": "The powermetrics tool is not supported or available."}]
     except Exception as e:
-        return [{"Error": str(e)}]
+        return [{"Error": f"An unexpected error occurred: {str(e)}"}]
+
+# Example usage
+if __name__ == "__main__":
+    print(get_gpu_stats())
